@@ -34,10 +34,18 @@ const plans = [
 
 const PricingCard = () => {
   const handleSubscribe = async () => {
-    // console.log("Redirecting to Stripe with Price ID:", priceId);
-    let response = await axios.post("/api/payments");
-    if (response && response.status === 200) {
-      console.log(response.data);
+    try {
+      let response = await axios.post("/api/payment");
+
+      if (response.status === 200) {
+        console.log("Redirecting to Stripe Checkout...");
+        window.location.href = response.data.url; // Redirect user to Stripe Checkout
+      }
+    } catch (error) {
+      console.error(
+        "Error processing subscription:",
+        error.response?.data || error.message
+      );
     }
   };
 
@@ -66,7 +74,7 @@ const PricingCard = () => {
             ))}
           </ul>
           <button
-            onClick={() => handleSubscribe(plan.stripePriceId)}
+            onClick={() => handleSubscribe()}
             className={`mt-6 text-white py-3 px-6 rounded-full transition duration-300 shadow-lg ${plan.buttonColor}`}
           >
             Get Started
