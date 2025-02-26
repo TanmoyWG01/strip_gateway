@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import axios from "axios";
 
@@ -33,19 +34,29 @@ const plans = [
 ];
 
 const PricingCard = () => {
-  const handleSubscribe = async () => {
+  const [loading, setLoading] = useState({});
+
+  const handleSubscribe = async (priceId, amount) => {
+    setLoading((prev) => ({ ...prev, [priceId]: true }));
+
     try {
-      let response = await axios.post("/api/payment");
+      console.log("Subscribing with:", { priceId, amount });
+
+      let response = await axios.post("/api/payment", { priceId, amount });
+
+      console.log("API Response:", response.data);
 
       if (response.status === 200) {
-        console.log("Redirecting to Stripe Checkout...");
-        window.location.href = response.data.url; // Redirect user to Stripe Checkout
+        window.location.href = response.data.url;
       }
     } catch (error) {
       console.error(
-        "Error processing subscription:",
+        "Subscription error:",
         error.response?.data || error.message
       );
+      alert("Error: " + (error.response?.data?.error || error.message));
+    } finally {
+      setLoading((prev) => ({ ...prev, [priceId]: false }));
     }
   };
 
@@ -73,12 +84,20 @@ const PricingCard = () => {
               </li>
             ))}
           </ul>
-          <button
-            onClick={() => handleSubscribe()}
-            className={`mt-6 text-white py-3 px-6 rounded-full transition duration-300 shadow-lg ${plan.buttonColor}`}
-          >
-            Get Started
-          </button>
+
+          <div className="flex justify-center mt-6">
+            <button
+              onClick={() => handleSubscribe(plan.stripePriceId, plan.price)}
+              className={`text-white py-3 px-6 rounded-full transition duration-300 shadow-lg flex items-center justify-center gap-2 ${plan.buttonColor}`}
+              disabled={loading[plan.stripePriceId]}
+            >
+              {loading[plan.stripePriceId] ? (
+                <span className="animate-spin border-4 border-white border-t-transparent rounded-full w-5 h-5"></span>
+              ) : (
+                "Get Started"
+              )}
+            </button>
+          </div>
         </div>
       ))}
     </div>
